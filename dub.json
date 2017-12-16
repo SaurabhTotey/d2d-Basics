@@ -1,0 +1,12 @@
+{
+	"name": "d2d-basics",
+	"authors": [
+		"Saurabh Totey"
+	],
+	"dependencies": {
+		"d2d": "~>1.0.8"
+	},
+	"description": "A test project made with d2d to see how easy it is to use. Images and music aren't for any sort of political statement and are only for the purposes of a joke.",
+	"copyright": "Copyright © 2017, Saurabh Totey",
+	"license": "MIT"
+}

@@ -1,0 +1,17 @@
+.dub
+docs.json
+__dummy.html
+docs/
+d2d-basics.so
+d2d-basics.dylib
+d2d-basics.dll
+d2d-basics.a
+d2d-basics.lib
+d2d-basics-test-*
+*.exe
+*.o
+*.obj
+*.lst
+d2d-basics
+.vscode
+dub.selections.json
