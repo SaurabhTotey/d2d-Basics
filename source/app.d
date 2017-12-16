@@ -1,5 +1,4 @@
 import std.algorithm;
-import std.math;
 import std.random;
 import std.datetime;
 import core.thread;
@@ -21,8 +20,7 @@ class MainScreen : Screen {
         this.location = new iRectangle(uniform(0,
                 this.container.window.size.x - width), uniform(0,
                 this.container.window.size.y - width), width, width);
-        int velBound = cast(int) sqrt(cast(float)(
-                this.container.window.size.x.pow(2) + this.container.window.size.y.pow(2))) / width;
+        int velBound = cast(int) (2 * this.container.window.size.magnitude / width);
         this.velocities = new iPoint(uniform(-velBound, velBound), uniform(-velBound, velBound));
         this.blocks = null;
     }
