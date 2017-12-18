@@ -1,4 +1,5 @@
 import std.algorithm;
+import std.array;
 import std.random;
 import std.datetime;
 import core.thread;
@@ -13,15 +14,15 @@ class MainScreen : Screen {
     Sound!(SoundType.Music) ussrAnthem;
     int wheelDisplacement;
     iRectangle location;
-    iPoint velocities;
+    iPoint velocity;
     iRectangle[] blocks;
 
     void randomize() {
         this.location = new iRectangle(uniform(0,
                 this.container.window.size.x - width), uniform(0,
                 this.container.window.size.y - width), width, width);
-        int velBound = cast(int) (2 * this.container.window.size.magnitude / width);
-        this.velocities = new iPoint(uniform(-velBound, velBound), uniform(-velBound, velBound));
+        int velBound = cast(int)(2 * this.container.window.size.magnitude / width);
+        this.velocity = new iPoint(uniform(-velBound, velBound), uniform(-velBound, velBound));
         this.blocks = null;
     }
 
@@ -32,41 +33,51 @@ class MainScreen : Screen {
         this.eagle = new Texture(loadImage("res/Eagle.png"), this.container.window.renderer);
         this.randomize();
         this.ussrAnthem = new Sound!(SoundType.Music)("res/USSR-Anthem.mp3");
+        musicVolume = MIX_MAX_VOLUME / 4;
         new Thread({
             SysTime lastTickTime;
             while (container.isRunning) {
                 if (Clock.currTime() >= lastTickTime + dur!"msecs"((1000 / ticksPerSecond))) {
-                    if (location.topLeft.x <= 0
-                        || location.topLeft.x + width >= container.window.size.x) {
-                        velocities.x *= -1;
+                    if (location.x <= 0 || location.x + width >= container.window.size.x) {
+                        velocity.x *= -1;
                         new Sound!(SoundType.Chunk)("res/Clap.wav");
                     }
-                    if (location.topLeft.y <= 0
-                        || location.topLeft.y + width >= container.window.size.y) {
-                        velocities.y *= -1;
+                    if (location.y <= 0 || location.y + width >= container.window.size.y) {
+                        velocity.y *= -1;
                         new Sound!(SoundType.Chunk)("res/Clap.wav");
                     }
-                    location.topLeft.x += velocities.x;
-                    location.topLeft.y += velocities.y;
+                    location.x += velocity.x;
+                    location.y += velocity.y;
                     lastTickTime = Clock.currTime();
                 }
             }
         }).start();
-        musicVolume = MIX_MAX_VOLUME / 4;
     }
 
     override void handleEvent(SDL_Event event) {
-        if (container.keyboard.allPressables.filter!(key => key.id == SDLK_SPACE)
-                .front.testAndRelease()) {
+        if (container.keyboard.allKeys.filter!(key => key.id == SDLK_SPACE).front.testAndRelease()) {
             this.randomize();
         }
-        if (container.mouse.allPressables.filter!(button => button.id == SDL_BUTTON_LEFT)
+        if (container.mouse.allButtons.filter!(button => button.id == SDL_BUTTON_LEFT)
                 .front.testAndRelease()) {
             this.blocks ~= new iRectangle(container.mouse.windowLocation.x - width / 2,
                     container.mouse.windowLocation.y - width / 2, width, width);
         }
+        if (container.mouse.allButtons.filter!(button => button.id == SDL_BUTTON_RIGHT)
+                .front.testAndRelease()) {
+            iRectangle[] toRemove = this.blocks.filter!(
+                    block => block.contains(container.mouse.windowLocation)).array;
+            //toRemove.each!(block => this.blocks = this.blocks.remove(this.blocks.countUntil(block)));
+            if (toRemove.length > 0) {
+                this.blocks = this.blocks.remove(this.blocks.countUntil(toRemove[$ - 1]));
+            }
+        }
         if (container.mouse.totalWheelDisplacement.y != wheelDisplacement) {
             musicVolume = musicVolume + container.mouse.totalWheelDisplacement.y - wheelDisplacement;
+            if (musicVolume < 0)
+                musicVolume = 0;
+            else if (musicVolume > MIX_MAX_VOLUME)
+                musicVolume = MIX_MAX_VOLUME;
             wheelDisplacement = container.mouse.totalWheelDisplacement.y;
         }
     }
