@@ -26,6 +26,34 @@ class MainScreen : Screen {
         this.blocks = null;
     }
 
+    void playCollisionSound() {
+        new Sound!(SoundType.Chunk)("res/Clap.wav");
+    }
+
+    void runDemo() {
+        SysTime lastTickTime;
+        while (container.isRunning) {
+            if (Clock.currTime() >= lastTickTime + dur!"msecs"((1000 / ticksPerSecond))) {
+                if (location.x <= 0 || location.x + width >= container.window.size.x) {
+                    velocity.x *= -1;
+                    playCollisionSound();
+                }
+                if (location.y <= 0 || location.y + width >= container.window.size.y) {
+                    velocity.y *= -1;
+                    playCollisionSound();
+                }
+                ulong numBlocks = blocks.length;
+                blocks = blocks.filter!(block => !location.intersects(block)).array;
+                if (numBlocks > blocks.length) {
+                    playCollisionSound();
+                }
+                location.x += velocity.x;
+                location.y += velocity.y;
+                lastTickTime = Clock.currTime();
+            }
+        }
+    }
+
     this(Display container) {
         super(container);
         this.hammerAndSickle = new Texture(loadImage("res/HammerAndSickle.png"),
@@ -34,29 +62,15 @@ class MainScreen : Screen {
         this.randomize();
         this.ussrAnthem = new Sound!(SoundType.Music)("res/USSR-Anthem.mp3");
         musicVolume = MIX_MAX_VOLUME / 4;
-        new Thread({
-            SysTime lastTickTime;
-            while (container.isRunning) {
-                if (Clock.currTime() >= lastTickTime + dur!"msecs"((1000 / ticksPerSecond))) {
-                    if (location.x <= 0 || location.x + width >= container.window.size.x) {
-                        velocity.x *= -1;
-                        new Sound!(SoundType.Chunk)("res/Clap.wav");
-                    }
-                    if (location.y <= 0 || location.y + width >= container.window.size.y) {
-                        velocity.y *= -1;
-                        new Sound!(SoundType.Chunk)("res/Clap.wav");
-                    }
-                    location.x += velocity.x;
-                    location.y += velocity.y;
-                    lastTickTime = Clock.currTime();
-                }
-            }
-        }).start();
+        new Thread(&this.runDemo).start();
     }
 
     override void handleEvent(SDL_Event event) {
         if (container.keyboard.allKeys.filter!(key => key.id == SDLK_SPACE).front.testAndRelease()) {
             this.randomize();
+        }
+        if (container.keyboard.allKeys.filter!(key => key.id == SDLK_ESCAPE).front.testAndRelease()) {
+            this.container.isRunning = false;
         }
         if (container.mouse.allButtons.filter!(button => button.id == SDL_BUTTON_LEFT)
                 .front.testAndRelease()) {
@@ -87,8 +101,8 @@ class MainScreen : Screen {
     }
 
     override void draw() {
-        this.container.window.renderer.copy(this.hammerAndSickle, this.location);
         this.blocks.each!(block => this.container.window.renderer.copy(this.eagle, block));
+        this.container.window.renderer.copy(this.hammerAndSickle, this.location);
     }
 
 }
