@@ -8,6 +8,7 @@ import d2d;
 /**
  * The actual activity the user will see
  * Determines what the window actually does
+ * TODO: demonstrate and test TTF
  */
 class MainScreen : Screen {
 
@@ -18,7 +19,7 @@ class MainScreen : Screen {
     Sound!(SoundType.Music) ussrAnthem; ///The USSR anthem music
     int wheelDisplacement; ///How much the mouse wheel has been displaced total in the y direction
     iRectangle location; ///Where the image of the hammer and sickle is
-    iPoint velocity; ///The velocity of the hammer and sickle as components
+    iVector velocity; ///The velocity of the hammer and sickle as components
     iRectangle[] blocks; ///The locations of all of the eagle textures
 
     /**
@@ -29,7 +30,7 @@ class MainScreen : Screen {
                 this.container.window.size.x - width), uniform(0,
                 this.container.window.size.y - width), width, width);
         int velBound = cast(int)(2 * this.container.window.size.magnitude / width);
-        this.velocity = new iPoint(uniform(-velBound, velBound), uniform(-velBound, velBound));
+        this.velocity = new iVector(uniform(-velBound, velBound), uniform(-velBound, velBound));
         this.blocks = null;
     }
 
@@ -69,7 +70,7 @@ class MainScreen : Screen {
                     playCollisionSound();
                 }
                 //Updates the block's location based on it's velocity
-                //TODO There is a better way to do this based on percentage of time until the next tick
+                //TODO: There is a better way to do this based on percentage of time until the next tick
                 location.x += velocity.x;
                 location.y += velocity.y;
                 lastTickTime = Clock.currTime();
@@ -97,7 +98,7 @@ class MainScreen : Screen {
      * Allows the screen to react to incoming events
      * Defines special behaviour for specific events
      */
-    override void handleEvent(SDL_Event event) {
+    void handleEvent(SDL_Event event) {
         //If space is pressed, the hammer and sickle location gets randomized and all of the eagles get deleted
         if (container.keyboard.allKeys.filter!(key => key.id == SDLK_SPACE).front.testAndRelease()) {
             this.randomize();
