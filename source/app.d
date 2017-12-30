@@ -1,14 +1,14 @@
 import std.algorithm;
 import std.array;
-import std.random;
+import std.conv;
 import std.datetime;
+import std.random;
 import core.thread;
 import d2d;
 
 /**
  * The actual activity the user will see
  * Determines what the window actually does
- * TODO: demonstrate and test TTF
  */
 class MainScreen : Screen {
 
@@ -16,10 +16,12 @@ class MainScreen : Screen {
     enum ticksPerSecond = 20; ///How many times the physics should update in a second
     Texture hammerAndSickle; ///The image of the hammer and sickle
     Texture eagle; ///The image of an eagle
+    Font textFont; ///The font to render the text
     Sound!(SoundType.Music) ussrAnthem; ///The USSR anthem music
     int wheelDisplacement; ///How much the mouse wheel has been displaced total in the y direction
     iRectangle location; ///Where the image of the hammer and sickle is
     iVector velocity; ///The velocity of the hammer and sickle as components
+    int eaglesDestroyed; ///The number of eagles the hammer and sickle destroyed
     iRectangle[] blocks; ///The locations of all of the eagle textures
 
     /**
@@ -31,6 +33,7 @@ class MainScreen : Screen {
                 this.container.window.size.y - width), width, width);
         int velBound = cast(int)(2 * this.container.window.size.magnitude / width);
         this.velocity = new iVector(uniform(-velBound, velBound), uniform(-velBound, velBound));
+        this.eaglesDestroyed = 0;
         this.blocks = null;
     }
 
@@ -63,11 +66,12 @@ class MainScreen : Screen {
                     playCollisionSound();
                 }
                 //Removes any blocks that are intersecting with the hammer and sickle
-                ulong numBlocks = blocks.length;
+                immutable numBlocks = blocks.length;
                 blocks = blocks.filter!(block => !location.intersects(block)).array;
-                //If any blocks got removed, a collision happened and thus the collision sound gets played
+                //If any blocks got removed, a collision happened and thus the collision sound gets played and the number of destroyed eagles gets updated
                 if (numBlocks > blocks.length) {
                     playCollisionSound();
+                    eaglesDestroyed += numBlocks - blocks.length;
                 }
                 //Updates the block's location based on it's velocity
                 //TODO: There is a better way to do this based on percentage of time until the next tick
@@ -87,6 +91,7 @@ class MainScreen : Screen {
         this.hammerAndSickle = new Texture(loadImage("res/HammerAndSickle.png"),
                 this.container.window.renderer);
         this.eagle = new Texture(loadImage("res/Eagle.png"), this.container.window.renderer);
+        this.textFont = new Font("res/OpenSans-Regular.ttf", 14);
         this.randomize();
         this.ussrAnthem = new Sound!(SoundType.Music)("res/USSR-Anthem.mp3");
         musicVolume = MIX_MAX_VOLUME / 4; //Music is a bit loud
@@ -149,6 +154,10 @@ class MainScreen : Screen {
     override void draw() {
         this.blocks.each!(block => this.container.window.renderer.copy(this.eagle, block));
         this.container.window.renderer.copy(this.hammerAndSickle, this.location);
+        this.container.window.renderer.copy(new Texture(this.textFont.renderTextBlended(
+                "Eagles Destroyed: " ~ this.eaglesDestroyed.to!string, Color(255, 255, 255)),
+                this.container.window.renderer), new iRectangle(0, 0,
+                this.container.window.size.x / 10, this.container.window.size.y / 30));
     }
 
 }
