@@ -54,8 +54,8 @@ class MainScreen : Screen {
     this(Display container) {
         super(container);
         this.hammerAndSickle = new Texture(loadImage("res/HammerAndSickle.png"),
-                this.container.window.renderer);
-        this.eagle = new Texture(loadImage("res/Eagle.png"), this.container.window.renderer);
+                this.container.renderer);
+        this.eagle = new Texture(loadImage("res/Eagle.png"), this.container.renderer);
         this.textFont = new Font("res/OpenSans-Regular.ttf", width / 3);
         this.randomize();
         this.ussrAnthem = new Sound!(SoundType.Music)("res/USSR-Anthem.mp3");
@@ -137,13 +137,13 @@ class MainScreen : Screen {
      * Text is drawn last so it goes on top of everything; text color changes depending on the amount of eagles destroyed
      */
     override void draw() {
-        this.blocks.each!(block => this.container.window.renderer.copy(this.eagle, block));
-        this.container.window.renderer.copy(this.hammerAndSickle, this.location);
-        this.container.window.renderer.copy(new Texture(this.textFont.renderTextBlended(
+        this.blocks.each!(block => this.container.renderer.copy(this.eagle, block));
+        this.container.renderer.copy(this.hammerAndSickle, this.location);
+        this.container.renderer.copy(new Texture(this.textFont.renderTextBlended(
                 "Eagles Destroyed: " ~ this.eaglesDestroyed.to!string, Color(255,
                 (255 - this.eaglesDestroyed < 0) ? 0 : cast(ubyte)(255 - this.eaglesDestroyed),
                 (255 - this.eaglesDestroyed < 0) ? 0 : cast(ubyte)(255 - this.eaglesDestroyed))),
-                this.container.window.renderer), new iVector(0, 0));
+                this.container.renderer), new iVector(0, 0));
     }
 
 }
